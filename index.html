@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NOCTURNA — O Ladrão de Sombras</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Contêiner Principal do Jogo (Centralizado e Responsivo) -->
+  <main id="game-wrapper">
+    <div id="canvas-container">
+      <!-- Canvas Principal 960x540 -->
+      <canvas id="gameCanvas" width="960" height="540"></canvas>
+
+      <!-- Camada de Transição de Mundos e Vinheta Noir -->
+      <div id="world-vignette" class="vignette-real"></div>
+
+      <!-- Banner de Alerta Temporário (Checkpoints, Objetivos, Avisos) -->
+      <div id="game-banner" class="banner-hidden">
+        <span id="banner-icon" class="banner-icon">★</span>
+        <span id="banner-text" class="banner-text">MENSAGEM</span>
+      </div>
+
+      <!-- HUD Superior Integrado em Estilo Quadrinhos -->
+      <header id="game-hud" class="hud-hidden">
+        <div class="hud-left">
+          <div class="hud-box hud-pill">
+            <span class="hud-tag">FASE</span>
+            <span id="hud-level" class="hud-value">1/6</span>
+          </div>
+          <div class="hud-box hud-pill">
+            <span class="hud-tag">PONTOS</span>
+            <span id="hud-score" class="hud-value font-mono">0000</span>
+          </div>
+          <div class="hud-box hud-pill">
+            <span class="hud-tag">VIDAS</span>
+            <span id="hud-lives" class="hud-value hearts">♥♥♥</span>
+          </div>
+        </div>
+
+        <div class="hud-center">
+          <div id="hud-mode-badge" class="mode-badge mode-real">
+            <span class="mode-label">MODO</span>
+            <span id="hud-mode-text" class="mode-text">REAL</span>
+          </div>
+          <div id="hud-shadow-gauge" class="shadow-gauge hidden">
+            <div class="gauge-label">SOMBRA: <span id="gauge-time">100%</span></div>
+            <div class="gauge-track">
+              <div id="gauge-fill" class="gauge-fill"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hud-right">
+          <div class="hud-box hud-pill">
+            <span class="hud-tag">💎</span>
+            <span id="hud-shards" class="hud-value font-mono">0/3</span>
+          </div>
+          <div class="hud-box hud-pill">
+            <span class="hud-tag">TEMPO</span>
+            <span id="hud-timer" class="hud-value font-mono">00:00</span>
+          </div>
+          <button id="btn-sound" class="hud-icon-btn" title="Alternar Som (M)" aria-label="Som">🔊</button>
+          <button id="btn-quick-restart" class="hud-icon-btn" title="Reiniciar Fase (R)" aria-label="Reiniciar">🔄</button>
+          <button id="btn-quick-pause" class="hud-icon-btn" title="Pausar (ESC)" aria-label="Pausa">⏸</button>
+        </div>
+
+        <!-- Barra inferior do HUD com Objetivo Atual -->
+        <div class="hud-objective-bar">
+          <span class="obj-prefix">OBJETIVO:</span>
+          <span id="hud-objective" class="obj-text">Atravesse o beco e alcance o outro lado.</span>
+        </div>
+      </header>
+
+      <!-- TELA 1: MENU PRINCIPAL -->
+      <section id="screen-menu" class="screen-overlay">
+        <div class="menu-comic-panel">
+          <div class="comic-header">
+            <span class="comic-issue">EDIÇÃO Nº 1 • HQ NOIR</span>
+            <h1 class="comic-title">NOCTURNA</h1>
+            <h2 class="comic-subtitle">O LADRÃO DE SOMBRAS</h2>
+          </div>
+
+          <div class="menu-character-preview">
+            <canvas id="menuPreviewCanvas" width="120" height="120"></canvas>
+            <div class="menu-quote">
+              <p>“A noite esconde segredos que a luz jamais revelará.”</p>
+            </div>
+          </div>
+
+          <nav class="menu-buttons">
+            <button id="btn-play" class="btn-comic btn-primary">
+              <span class="btn-bullet">▶</span> INICIAR JOGO
+            </button>
+            <button id="btn-how" class="btn-comic btn-secondary">
+              <span class="btn-bullet">📖</span> COMO JOGAR
+            </button>
+            <button id="btn-records" class="btn-comic btn-secondary">
+              <span class="btn-bullet">🏆</span> RECORDES
+            </button>
+          </nav>
+
+          <footer class="menu-footer">
+            <p>Controles Rápidos: <strong>A / D</strong> andar • <strong>ESPAÇO</strong> pular • <strong>SHIFT</strong> trocar de mundo</p>
+          </footer>
+        </div>
+      </section>
+
+      <!-- TELA 2: COMO JOGAR -->
+      <section id="screen-how" class="screen-overlay hidden">
+        <div class="modal-comic-panel">
+          <div class="modal-header">
+            <h2>MANUAL DO VIGILANTE</h2>
+            <button id="btn-close-how" class="btn-close" aria-label="Fechar">✕</button>
+          </div>
+
+          <div class="modal-content">
+            <div class="how-section">
+              <h3>CONTROLES</h3>
+              <div class="controls-grid">
+                <div class="control-item"><kbd>A</kbd> / <kbd>D</kbd> ou <kbd>←</kbd> <kbd>→</kbd> <span>Mover para Esquerda / Direita</span></div>
+                <div class="control-item"><kbd>ESPAÇO</kbd> <span>Pular (consistente e responsivo)</span></div>
+                <div class="control-item"><kbd>SHIFT</kbd> <span>Alternar entre MUNDO REAL e SOMBRAS</span></div>
+                <div class="control-item"><kbd>E</kbd> <span>Interagir com alavancas e mecanismos</span></div>
+                <div class="control-item"><kbd>Q</kbd> <span>Projetar Sombra Separada (a partir da Fase 4)</span></div>
+                <div class="control-item"><kbd>ESC</kbd> <span>Pausar jogo</span></div>
+                <div class="control-item"><kbd>R</kbd> <span>Reiniciar fase atual</span></div>
+                <div class="control-item"><kbd>M</kbd> <span>Ligar / Desligar som</span></div>
+              </div>
+            </div>
+
+            <div class="how-section">
+              <h3>A MECÂNICA CENTRAL: OS DOIS MUNDOS</h3>
+              <div class="world-compare-grid">
+                <div class="world-card card-real">
+                  <h4>☀️ MUNDO REAL</h4>
+                  <p>A cidade iluminada. Guardas com lanternas vigiam e patrulham. Portas pesadas e paredes sólidas bloqueiam seu caminho. Plataformas normais estão sólidas.</p>
+                </div>
+                <div class="world-card card-shadow">
+                  <h4>🌑 MUNDO DAS SOMBRAS</h4>
+                  <p>O véu sombrio. Guardas não conseguem detectar Noct! Algumas paredes desaparecem revelando passagens secretas e pontes etéreas surgem. Cuidado: Caçadores das Sombras (fases 5-6) caçam apenas aqui!</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="how-section">
+              <h3>INIMIGOS & DICAS</h3>
+              <ul class="tips-list">
+                <li><strong>Guarda da Noite:</strong> Possui cone de visão amarelo. Se detectar você no Mundo Real, iniciará perseguição. Entre nas sombras (<kbd>SHIFT</kbd>) para desaparecer da visão dele!</li>
+                <li><strong>Sentinela:</strong> Refletor fixo de alta intensidade. Atravessar sua luz no Mundo Real causará dano; use a sombra para passar.</li>
+                <li><strong>Caçador das Sombras:</strong> Surge nas fases avançadas. Ele consegue enxergar no Mundo das Sombras — volte ao Mundo Real para evitá-lo!</li>
+                <li><strong>Sombra Separada (Fase 4+):</strong> Pressione <kbd>Q</kbd> para controlar uma cópia de sombra enquanto Noct aguarda em segurança. Ela pode acionar botões e passar por frestas!</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button id="btn-back-how" class="btn-comic btn-primary">ENTENDIDO</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- TELA 3: RECORDES -->
+      <section id="screen-records" class="screen-overlay hidden">
+        <div class="modal-comic-panel">
+          <div class="modal-header">
+            <h2>RECORDES & CONQUISTAS</h2>
+            <button id="btn-close-records" class="btn-close" aria-label="Fechar">✕</button>
+          </div>
+
+          <div class="modal-content">
+            <div class="records-summary-grid">
+              <div class="record-badge">
+                <span class="rec-title">MAIOR PONTUAÇÃO</span>
+                <span id="rec-high-score" class="rec-num">0</span>
+              </div>
+              <div class="record-badge">
+                <span class="rec-title">FASES CONCLUÍDAS</span>
+                <span id="rec-levels-cleared" class="rec-num">0 / 6</span>
+              </div>
+              <div class="record-badge">
+                <span class="rec-title">TOTAL DE FRAGMENTOS</span>
+                <span id="rec-total-shards" class="rec-num">0 / 18</span>
+              </div>
+              <div class="record-badge">
+                <span class="rec-title">MELHOR TEMPO TOTAL</span>
+                <span id="rec-best-time" class="rec-num">--:--</span>
+              </div>
+            </div>
+
+            <div class="records-table-wrapper">
+              <table class="comic-table">
+                <thead>
+                  <tr>
+                    <th>Fase</th>
+                    <th>Nome</th>
+                    <th>Melhor Tempo</th>
+                    <th>Fragmentos</th>
+                  </tr>
+                </thead>
+                <tbody id="records-table-body">
+                  <!-- Preenchido via script -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button id="btn-reset-records" class="btn-comic btn-danger">ZERAR DADOS</button>
+            <button id="btn-back-records" class="btn-comic btn-primary">VOLTAR</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- TELA 4: PAUSA -->
+      <section id="screen-pause" class="screen-overlay hidden">
+        <div class="menu-comic-panel menu-dialog">
+          <h2 class="dialog-title">JOGO PAUSADO</h2>
+          <p class="dialog-desc">Noct aguarda nas sombras...</p>
+
+          <nav class="menu-buttons">
+            <button id="btn-resume" class="btn-comic btn-primary">
+              <span class="btn-bullet">▶</span> CONTINUAR
+            </button>
+            <button id="btn-pause-restart" class="btn-comic btn-secondary">
+              <span class="btn-bullet">🔄</span> REINICIAR FASE
+            </button>
+            <button id="btn-pause-menu" class="btn-comic btn-tertiary">
+              <span class="btn-bullet">🏠</span> MENU PRINCIPAL
+            </button>
+          </nav>
+        </div>
+      </section>
+
+      <!-- TELA 5: DERROTA (GAME OVER) -->
+      <section id="screen-gameover" class="screen-overlay hidden">
+        <div class="menu-comic-panel menu-dialog panel-gameover">
+          <div class="defeat-badge">☠ CAPTURADO</div>
+          <h2 class="dialog-title">A NOITE TE ENVOLVEU</h2>
+          <p class="dialog-desc">Suas vidas se esgotaram e a patrulha frustrou sua missão.</p>
+
+          <div class="defeat-stats">
+            <p>Fase: <strong id="defeat-level-name">O Beco</strong></p>
+            <p>Pontos acumulados: <strong id="defeat-score">0</strong></p>
+          </div>
+
+          <nav class="menu-buttons">
+            <button id="btn-gameover-retry" class="btn-comic btn-primary">
+              <span class="btn-bullet">🔄</span> JOGAR NOVAMENTE
+            </button>
+            <button id="btn-gameover-menu" class="btn-comic btn-secondary">
+              <span class="btn-bullet">🏠</span> MENU PRINCIPAL
+            </button>
+          </nav>
+        </div>
+      </section>
+
+      <!-- TELA 6: VITÓRIA FINAL -->
+      <section id="screen-victory" class="screen-overlay hidden">
+        <div class="menu-comic-panel victory-panel">
+          <div class="victory-header">
+            <span class="victory-tag">MISSÃO CUMPRIDA</span>
+            <h1 class="victory-title">VOCÊ DOMINOU AS SOMBRAS</h1>
+            <p class="victory-subtitle">O Coração da Noite foi recuperado das alturas da Torre Central!</p>
+          </div>
+
+          <div class="victory-art-container">
+            <canvas id="victoryCanvas" width="280" height="150"></canvas>
+          </div>
+
+          <div class="victory-stats-grid">
+            <div class="v-stat-card">
+              <span class="v-label">PONTUAÇÃO FINAL</span>
+              <span id="v-final-score" class="v-val">0000</span>
+            </div>
+            <div class="v-stat-card">
+              <span class="v-label">TEMPO TOTAL</span>
+              <span id="v-final-time" class="v-val">00:00</span>
+            </div>
+            <div class="v-stat-card">
+              <span class="v-label">FRAGMENTOS COLETADOS</span>
+              <span id="v-final-shards" class="v-val">0 / 18</span>
+            </div>
+            <div class="v-stat-card">
+              <span class="v-label">VIDAS RESTANTES</span>
+              <span id="v-final-lives" class="v-val">♥♥♥</span>
+            </div>
+          </div>
+
+          <div class="menu-buttons horizontal">
+            <button id="btn-victory-replay" class="btn-comic btn-primary">
+              <span class="btn-bullet">🔄</span> JOGAR NOVAMENTE
+            </button>
+            <button id="btn-victory-menu" class="btn-comic btn-secondary">
+              <span class="btn-bullet">🏠</span> MENU PRINCIPAL
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Script Principal do Jogo -->
+  <script src="script.js"></script>
+</body>
+</html>
